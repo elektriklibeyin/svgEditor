@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Metin Editörü</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SVG Metin Editörü</h1>
+            <button id="addNewSvg" class="btn btn-primary">+ Yeni SVG Ekle</button>
+        </header>
+
+        <!-- Ana Ekran - SVG Listesi -->
+        <main id="mainScreen" class="screen active">
+            <div class="svg-grid" id="svgGrid">
+                <!-- SVG kartları buraya dinamik olarak eklenecek -->
+            </div>
+            
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">📄</div>
+                <h3>Henüz SVG dosyası yok</h3>
+                <p>Başlamak için yeni bir SVG dosyası ekleyin</p>
+                <button class="btn btn-primary" onclick="showUploadModal()">İlk SVG'nizi Ekleyin</button>
+            </div>
+        </main>
+
+        <!-- SVG Yükleme Modal -->
+        <div id="uploadModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Yeni SVG Ekle</h2>
+                    <span class="close" onclick="closeUploadModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="svgUploadForm">
+                        <div class="form-group">
+                            <label for="svgFile">SVG Dosyası *</label>
+                            <input type="file" id="svgFile" accept=".svg" required>
+                            <div class="file-info" id="fileInfo" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="svgTitle">Tanım *</label>
+                            <input type="text" id="svgTitle" placeholder="SVG dosyasının ne olduğunu açıklayın" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="svgDescription">Açıklama</label>
+                            <textarea id="svgDescription" placeholder="Detaylı açıklama (isteğe bağlı)" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="preview-section" id="previewSection" style="display: none;">
+                            <h4>Önizleme</h4>
+                            <div class="svg-preview" id="svgPreview"></div>
+                            <div class="placeholder-info" id="placeholderInfo"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">İptal</button>
+                    <button type="submit" form="svgUploadForm" class="btn btn-primary">Kaydet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SVG Düzenleme Ekranı -->
+        <div id="editScreen" class="screen">
+            <div class="edit-header">
+                <button class="btn btn-secondary" onclick="backToMain()">← Geri</button>
+                <h2 id="editTitle">SVG Düzenle</h2>
+            </div>
+            
+            <div class="edit-content">
+                <div class="edit-sidebar">
+                    <div class="section">
+                        <h3>Çıktı Ayarları</h3>
+                        <div class="form-group">
+                            <label>Boyut</label>
+                            <div class="size-inputs">
+                                <input type="number" id="outputWidth" placeholder="Genişlik" min="1">
+                                <span>×</span>
+                                <input type="number" id="outputHeight" placeholder="Yükseklik" min="1">
+                                <span>px</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>Metin Değiştirme</h3>
+                        <div id="placeholderInputs">
+                            <!-- Placeholder input alanları buraya dinamik olarak eklenecek -->
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <button class="btn btn-primary btn-block" onclick="generatePreview()">Önizleme Oluştur</button>
+                        <button class="btn btn-success btn-block" onclick="downloadSvg()">SVG İndir</button>
+                    </div>
+                </div>
+                
+                <div class="edit-main">
+                    <div class="svg-canvas" id="svgCanvas">
+                        <!-- SVG önizlemesi buraya gelecek -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast bildirimleri -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
