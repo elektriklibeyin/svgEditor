@@ -15,6 +15,15 @@
 
         <!-- Ana Ekran - SVG Listesi -->
         <main id="mainScreen" class="screen active">
+            <div class="search-section">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="SVG'lerde ara... (tanım, açıklama)" />
+                    <button type="button" id="clearSearch" class="clear-btn" style="display: none;">&times;</button>
+                </div>
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <span id="resultCount">0</span> sonuç bulundu
+                </div>
+            </div>
             <div class="svg-grid" id="svgGrid">
                 <!-- SVG kartları buraya dinamik olarak eklenecek -->
             </div>

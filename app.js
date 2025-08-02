@@ -3,12 +3,15 @@
 class SVGEditor {
     constructor() {
         this.svgData = [];
+        this.filteredSvgData = [];
         this.currentSvg = null;
+        this.searchTerm = '';
         this.init();
     }
 
     init() {
         this.loadSvgData();
+        this.filteredSvgData = [...this.svgData]; // Başlangıçta tüm veriyi göster
         this.setupEventListeners();
         this.renderSvgList();
     }
@@ -33,6 +36,10 @@ class SVGEditor {
         
         // Dosya seçimi
         document.getElementById('svgFile').addEventListener('change', (e) => this.handleFileSelect(e));
+        
+        // Arama işlemleri
+        document.getElementById('searchInput').addEventListener('input', (e) => this.handleSearch(e));
+        document.getElementById('clearSearch').addEventListener('click', () => this.clearSearch());
         
         // Modal kapatma
         document.addEventListener('click', (e) => {
@@ -196,6 +203,7 @@ class SVGEditor {
             
             // Veri listesine ekle
             this.svgData.push(newSvg);
+            this.filteredSvgData = [...this.svgData]; // Filtrelenmiş veriyi de güncelle
             this.saveSvgData();
             
             // UI'ı güncelle
@@ -209,10 +217,58 @@ class SVGEditor {
         }
     }
 
+    // Arama işlemi
+    handleSearch(event) {
+        this.searchTerm = event.target.value.toLowerCase().trim();
+        
+        if (this.searchTerm === '') {
+            this.filteredSvgData = [...this.svgData];
+            document.getElementById('clearSearch').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+        } else {
+            this.filteredSvgData = this.svgData.filter(svg => {
+                const titleMatch = svg.title.toLowerCase().includes(this.searchTerm);
+                const descriptionMatch = svg.description && svg.description.toLowerCase().includes(this.searchTerm);
+                return titleMatch || descriptionMatch;
+            });
+            
+            document.getElementById('clearSearch').style.display = 'block';
+            this.showSearchResults();
+        }
+        
+        this.renderSvgList();
+    }
+
+    // Arama sonuçlarını göster
+    showSearchResults() {
+        const searchResults = document.getElementById('searchResults');
+        const resultCount = document.getElementById('resultCount');
+        
+        resultCount.textContent = this.filteredSvgData.length;
+        searchResults.style.display = 'block';
+        
+        if (this.filteredSvgData.length > 0) {
+            searchResults.className = 'search-results has-results';
+        } else {
+            searchResults.className = 'search-results no-results';
+        }
+    }
+
+    // Aramayı temizle
+    clearSearch() {
+        document.getElementById('searchInput').value = '';
+        this.searchTerm = '';
+        this.filteredSvgData = [...this.svgData];
+        document.getElementById('clearSearch').style.display = 'none';
+        document.getElementById('searchResults').style.display = 'none';
+        this.renderSvgList();
+    }
+
     // SVG listesini render et
     renderSvgList() {
         const svgGrid = document.getElementById('svgGrid');
         const emptyState = document.getElementById('emptyState');
+        const dataToRender = this.searchTerm ? this.filteredSvgData : this.svgData;
         
         if (this.svgData.length === 0) {
             svgGrid.style.display = 'none';
@@ -220,25 +276,54 @@ class SVGEditor {
             return;
         }
         
+        if (dataToRender.length === 0 && this.searchTerm) {
+            svgGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #7f8c8d;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🔍</div>
+                    <h3>Arama sonucu bulunamadı</h3>
+                    <p>"${this.escapeHtml(this.searchTerm)}" için sonuç bulunamadı</p>
+                    <button class="btn btn-secondary" onclick="svgEditor.clearSearch()" style="margin-top: 15px;">
+                        Aramayı Temizle
+                    </button>
+                </div>
+            `;
+            svgGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            return;
+        }
+        
         svgGrid.style.display = 'grid';
         emptyState.style.display = 'none';
         
-        svgGrid.innerHTML = this.svgData.map(svg => this.createSvgCard(svg)).join('');
+        svgGrid.innerHTML = dataToRender.map(svg => this.createSvgCard(svg)).join('');
     }
 
     // SVG kartı oluştur
     createSvgCard(svg) {
         const createdDate = new Date(svg.createdAt).toLocaleDateString('tr-TR');
         const placeholderCount = svg.placeholders.length;
+        const highlightClass = this.searchTerm ? 'highlight' : '';
+        
+        // Arama terimi varsa metinleri vurgula
+        let highlightedTitle = this.escapeHtml(svg.title);
+        let highlightedDescription = svg.description ? this.escapeHtml(svg.description) : '';
+        
+        if (this.searchTerm) {
+            const regex = new RegExp(`(${this.escapeRegex(this.searchTerm)})`, 'gi');
+            highlightedTitle = highlightedTitle.replace(regex, '<mark>$1</mark>');
+            if (highlightedDescription) {
+                highlightedDescription = highlightedDescription.replace(regex, '<mark>$1</mark>');
+            }
+        }
         
         return `
-            <div class="svg-card" onclick="svgEditor.editSvg('${svg.id}')">
+            <div class="svg-card ${highlightClass}" onclick="svgEditor.editSvg('${svg.id}')">
                 <div class="svg-card-preview">
                     ${svg.content}
                 </div>
                 <div class="svg-card-content">
-                    <div class="svg-card-title">${this.escapeHtml(svg.title)}</div>
-                    ${svg.description ? `<div class="svg-card-description">${this.escapeHtml(svg.description)}</div>` : ''}
+                    <div class="svg-card-title">${highlightedTitle}</div>
+                    ${svg.description ? `<div class="svg-card-description">${highlightedDescription}</div>` : ''}
                     <div class="svg-card-meta">
                         <span>${createdDate}</span>
                         <span>${placeholderCount} placeholder</span>
@@ -271,6 +356,7 @@ class SVGEditor {
         }
         
         this.svgData = this.svgData.filter(svg => svg.id !== svgId);
+        this.filteredSvgData = this.filteredSvgData.filter(svg => svg.id !== svgId);
         this.saveSvgData();
         this.renderSvgList();
         this.showToast('SVG silindi', 'success');
