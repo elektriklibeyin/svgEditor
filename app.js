@@ -458,7 +458,7 @@ class SVGEditor {
                 
                 // Font boyutu: 140px, karakter genişliği: 140 * 0.75 = 105px
                 const fontSize = 140;
-                const charWidth = fontSize * 0.73;
+                const charWidth = fontSize * 0.72;
                 const placeholderWidth = placeholderLength * charWidth;
                 
                 console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Genişlik: ${placeholderWidth}`);
@@ -531,7 +531,7 @@ class SVGEditor {
                 const letterSvg = await this.loadLetterSvg(char);
                 if (letterSvg) {
                     // Scale değerini al ve autoScale ile çarp
-                    const manualScale = document.getElementById('letterScale')?.value || 0.5;
+                    const manualScale = document.getElementById('letterScale')?.value || 1.0;
                     const finalScale = manualScale * autoScale;
                     
                     // Harfi konumlandır ve ölçeklendir
