@@ -421,41 +421,48 @@ class SVGEditor {
         }
     }
 
-    // Önizleme oluştur
+    // Basit önizleme - sadece [####] replace
     generatePreview() {
         if (!this.currentSvg) return;
         
         let modifiedSvg = this.currentSvg.content;
         
-        // Placeholder'ları kullanıcı metinleriyle değiştir
-        this.currentSvg.placeholders.forEach((placeholder, index) => {
-            const input = document.getElementById(`placeholder_${index}`);
-            const userText = input.value.trim();
-            
-            if (userText) {
-                // Şimdilik basit metin değiştirme (ilerleyen aşamalarda SVG harfleri kullanılacak)
+        // İlk input alanındaki metni al
+        const input = document.getElementById('placeholder_0');
+        const userText = input ? input.value.trim() : '';
+        
+        if (userText) {
+            // Placeholder'ı bul ve uzunluğunu hesapla
+            const placeholderMatch = modifiedSvg.match(/\[#+\]/);
+            if (placeholderMatch) {
+                const placeholder = placeholderMatch[0];
+                const placeholderLength = placeholder.length - 2; // [ ve ] hariç
+                
+                // Font boyutu: 140px, karakter genişliği: 140 * 0.6 = 84px
+                const fontSize = 140;
+                const charWidth = fontSize * 0.6;
+                const placeholderWidth = placeholderLength * charWidth;
+                
+                // Orta nokta hesapla (biraz sağa kaydır: +100px)
+                const centerX = 424.4 + (placeholderWidth / 2) + 100;
+                
+                console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Orta: ${centerX}`);
+                
+                // Placeholder'ı sil ve yerine yazı koy
+                modifiedSvg = modifiedSvg.replace(placeholder, userText);
+                
+                // Yazıyı ortalanmış konuma yerleştir
                 modifiedSvg = modifiedSvg.replace(
-                    new RegExp(this.escapeRegex(placeholder), 'g'),
-                    `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="black">${this.escapeHtml(userText)}</text>`
+                    `<text class="cls-1" transform="translate(424.4 1478.8)">${userText}</text>`,
+                    `<text class="cls-1" transform="translate(${centerX} 1478.8)" text-anchor="middle" fill="red">${userText}</text>`
                 );
             }
-        });
-        
-        // Boyut ayarlarını uygula
-        const width = document.getElementById('outputWidth').value;
-        const height = document.getElementById('outputHeight').value;
-        
-        if (width && height) {
-            modifiedSvg = modifiedSvg.replace(
-                /<svg[^>]*>/,
-                `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`
-            );
         }
         
-        // Önizlemeyi güncelle
+        // SVG'yi göster
         document.getElementById('svgCanvas').innerHTML = modifiedSvg;
         
-        this.showToast('Önizleme güncellendi', 'success');
+        console.log('Basit replace yapıldı:', userText);
     }
 
     // SVG'yi indir
