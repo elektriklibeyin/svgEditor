@@ -414,9 +414,9 @@ class SVGEditor {
         });
         
         // Harf boyutu değişikliğinde otomatik önizleme
-        const letterScaleSelect = document.getElementById('letterScale');
-        if (letterScaleSelect) {
-            letterScaleSelect.addEventListener('change', () => {
+        const letterScaleInput = document.getElementById('letterScale');
+        if (letterScaleInput) {
+            letterScaleInput.addEventListener('input', () => {
                 this.generatePreview();
             });
         }
@@ -480,10 +480,13 @@ class SVGEditor {
                     const totalTextWidth = userText.length * charWidth;
                     const startX = originalX + (placeholderWidth / 2) - (totalTextWidth / 2);
                     
-                    console.log(`Başlangıç X: ${startX}, Toplam genişlik: ${totalTextWidth}`);
+                    // Y koordinatını placeholder ile aynı hizaya getir (harfler için uygun offset)
+                    const adjustedY = originalY - 100; // Harflerin baseline'ını ayarla
+                    
+                    console.log(`Başlangıç X: ${startX}, Orijinal Y: ${originalY}, Ayarlanmış Y: ${adjustedY}`);
                     
                     // Harfleri letters klasöründen yükle ve ekle
-                    this.addLettersToSvg(modifiedSvg, userText, startX, originalY, charWidth);
+                    this.addLettersToSvg(modifiedSvg, userText, startX, adjustedY, charWidth);
                     return;
                 }
             }
