@@ -412,6 +412,14 @@ class SVGEditor {
                 });
             }
         });
+        
+        // Harf boyutu değişikliğinde otomatik önizleme
+        const letterScaleSelect = document.getElementById('letterScale');
+        if (letterScaleSelect) {
+            letterScaleSelect.addEventListener('change', () => {
+                this.generatePreview();
+            });
+        }
     }
 
     // Varsayılan boyutları ayarla
@@ -456,29 +464,28 @@ class SVGEditor {
                 console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Genişlik: ${placeholderWidth}`);
                 
                 // Placeholder'ı sil
-                modifiedSvg = modifiedSvg.replace(placeholder, userText);
+                modifiedSvg = modifiedSvg.replace(placeholder, '');
                 
-                // Text elementini bul ve değiştir (genel regex)
-                const textRegex = new RegExp(`<text[^>]*>${userText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</text>`, 'g');
-                modifiedSvg = modifiedSvg.replace(textRegex, (match) => {
-                    console.log('Bulunan text elementi:', match);
+                // Text elementini bul ve kaldır
+                const textRegex = /<text[^>]*><\/text>/g;
+                modifiedSvg = modifiedSvg.replace(textRegex, '');
+                
+                // Transform koordinatlarını bul (orijinal placeholder konumu)
+                const originalTransformMatch = this.currentSvg.content.match(/transform="translate\(([^,]+)[,\s]+([^)]+)\)"/);
+                if (originalTransformMatch) {
+                    const originalX = parseFloat(originalTransformMatch[1]);
+                    const originalY = parseFloat(originalTransformMatch[2]);
                     
-                    // Transform koordinatlarını çıkar
-                    const transformMatch = match.match(/transform="translate\(([^,]+)[,\s]+([^)]+)\)"/);
-                    if (transformMatch) {
-                        const originalX = parseFloat(transformMatch[1]);
-                        const originalY = parseFloat(transformMatch[2]);
-                        
-                        // Orta nokta hesapla
-                        const centerX = originalX + (placeholderWidth / 2);
-                        
-                        console.log(`Orijinal X: ${originalX}, Yeni orta X: ${centerX}`);
-                        
-                        // Yeni text elementi oluştur
-                        return `<text class="cls-1" transform="translate(${centerX} ${originalY})" text-anchor="middle" fill="red">${userText}</text>`;
-                    }
-                    return match;
-                });
+                    // Başlangıç pozisyonu (ortalamak için)
+                    const totalTextWidth = userText.length * charWidth;
+                    const startX = originalX + (placeholderWidth / 2) - (totalTextWidth / 2);
+                    
+                    console.log(`Başlangıç X: ${startX}, Toplam genişlik: ${totalTextWidth}`);
+                    
+                    // Harfleri letters klasöründen yükle ve ekle
+                    this.addLettersToSvg(modifiedSvg, userText, startX, originalY, charWidth);
+                    return;
+                }
             }
         }
         
@@ -486,6 +493,81 @@ class SVGEditor {
         document.getElementById('svgCanvas').innerHTML = modifiedSvg;
         
         console.log('Basit replace yapıldı:', userText);
+    }
+
+    // Harfleri SVG'ye ekle
+    async addLettersToSvg(modifiedSvg, text, startX, startY, charWidth) {
+        try {
+            let currentX = startX;
+            let letterElements = '';
+            
+            // Her harf için
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toUpperCase();
+                
+                if (char === ' ') {
+                    // Boşluk için sadece pozisyonu kaydır
+                    currentX += charWidth * 0.5;
+                    continue;
+                }
+                
+                // Harf SVG'sini yükle
+                const letterSvg = await this.loadLetterSvg(char);
+                if (letterSvg) {
+                    // Scale değerini al
+                    const scaleValue = document.getElementById('letterScale')?.value || 0.5;
+                    
+                    // Harfi konumlandır ve ölçeklendir
+                    const scaledLetter = this.scaleLetter(letterSvg, currentX, startY, charWidth, scaleValue);
+                    letterElements += scaledLetter;
+                    
+                    console.log(`${char} harfi eklendi: X=${currentX}`);
+                }
+                
+                currentX += charWidth;
+            }
+            
+            // Harfleri SVG'ye ekle (</svg> etiketinden önce)
+            const finalSvg = modifiedSvg.replace('</svg>', letterElements + '</svg>');
+            
+            // SVG'yi göster
+            document.getElementById('svgCanvas').innerHTML = finalSvg;
+            
+            console.log('Harf sistemi ile yazı eklendi:', text);
+            
+        } catch (error) {
+            console.error('Harf ekleme hatası:', error);
+            // Hata durumunda normal SVG'yi göster
+            document.getElementById('svgCanvas').innerHTML = modifiedSvg;
+        }
+    }
+
+    // Harf SVG'sini yükle
+    async loadLetterSvg(letter) {
+        try {
+            const response = await fetch(`letters/${letter}.svg`);
+            if (!response.ok) {
+                console.warn(`${letter}.svg bulunamadı`);
+                return null;
+            }
+            return await response.text();
+        } catch (error) {
+            console.error(`${letter} harfi yüklenirken hata:`, error);
+            return null;
+        }
+    }
+
+    // Harfi ölçeklendir ve konumlandır
+    scaleLetter(letterSvg, x, y, targetWidth, scale = 0.5) {
+        // SVG içeriğini al (path elementlerini)
+        const pathMatch = letterSvg.match(/<path[^>]*d="([^"]*)"[^>]*>/g);
+        if (!pathMatch) return '';
+        
+        // Her path için transform ekle
+        return pathMatch.map(path => {
+            // Beyaz renk ve konumlandırma ekle
+            return path.replace('<path', `<path transform="translate(${x}, ${y}) scale(${scale})" fill="white" stroke="white"`);
+        }).join('');
     }
 
     // SVG'yi indir
