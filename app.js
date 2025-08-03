@@ -676,8 +676,8 @@ class SVGEditor {
                 const char = text[i].toUpperCase();
                 
                 if (char === ' ') {
-                    // Boşluk için sadece pozisyonu kaydır
-                    currentX += charWidth * 0.5;
+                    // Boşluk için pozisyonu kaydır + 5px boşluk
+                    currentX += charWidth * 0.5 + 10;
                     continue;
                 }
                 
@@ -694,12 +694,14 @@ class SVGEditor {
                     
                     console.log(`${char} harfi eklendi: X=${currentX}`);
                     
-                    // Harfin gerçek genişliğini kullan
+                    // Harfin gerçek genişliğini kullan + 5px boşluk
                     const letterWidth = this.getLetterWidth(letterSvg, finalScale);
-                    currentX += letterWidth;
+                    const oldX = currentX;
+                    currentX += letterWidth + 10;
+                    console.log(`${char} harfi: genişlik=${letterWidth}, eski X=${oldX}, yeni X=${currentX}`);
                 } else {
-                    // Harf bulunamazsa varsayılan genişlik
-                    currentX += charWidth;
+                    // Harf bulunamazsa varsayılan genişlik + 5px boşluk
+                    currentX += charWidth + 10;
                 }
             }
             
