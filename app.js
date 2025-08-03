@@ -465,7 +465,9 @@ class SVGEditor {
                 // Font boyutu: 140px, karakter genişliği: 140 * 0.75 = 105px
                 const fontSize = 140;
                 const charWidth = fontSize * 0.72;
-                const placeholderWidth = placeholderLength * charWidth;
+                // Input'tan genişlik oku, yoksa hesapla
+                const widthInput = document.getElementById('widthInput');
+                const placeholderWidth = widthInput?.value ? parseFloat(widthInput.value) : placeholderLength * charWidth;
                 
                 console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Genişlik: ${placeholderWidth}`);
                 
@@ -540,17 +542,13 @@ class SVGEditor {
             const charWidth = 140 * 0.72; // Font boyutu × çarpan
             const calculatedWidth = placeholderLength * charWidth;
             
-            container.innerHTML = `
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
-                    <p style="margin: 0; font-size: 14px; color: #2c3e50;">
-                        <strong>Placeholder:</strong> ${placeholder}<br>
-                        <strong>Karakter Sayısı:</strong> ${placeholderLength} adet<br>
-                        <strong>Hesaplanan Genişlik:</strong> ${Math.round(calculatedWidth)} piksel
-                    </p>
-                </div>
-            `;
+            // Sadece text'leri güncelle, input'u koruma
+            document.getElementById('placeholderText').textContent = placeholder;
+            document.getElementById('placeholderCount').textContent = placeholderLength;
+            document.getElementById('widthInput').value = Math.round(calculatedWidth);
         } else {
-            container.innerHTML = '<p style="color: #7f8c8d;">Yazma alanı bulunamadı.</p>';
+            document.getElementById('placeholderText').textContent = 'Bulunamadı';
+            document.getElementById('placeholderCount').textContent = '0';
         }
     }
 
@@ -601,7 +599,7 @@ class SVGEditor {
                 </div>
                 <div class="coord-group">
                     <label>Yazma Alanı Genişliği:</label>
-                    <input type="number" id="placeholderWidth" value="${Math.round(placeholderWidth)}" step="1" readonly style="background: #f8f9fa;">
+                    <input type="number" id="placeholderWidth" value="${Math.round(placeholderWidth)}" step="1" style="background: #f8f9fa;">
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="svgEditor.updateCoordinates()">Koordinatları Güncelle</button>
                 ${customCoords ? '<p style="color: #27ae60; font-size: 12px; margin-top: 5px;">✓ Özel koordinatlar yüklendi</p>' : ''}
