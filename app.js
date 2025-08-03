@@ -54,6 +54,17 @@ class SVGEditor {
                 this.closeUploadModal();
             }
         });
+        
+        // Yazma alanı genişliği değiştiğinde otomatik önizleme
+        document.addEventListener('input', (e) => {
+            if (e.target.id === 'widthInput') {
+                this.generatePreview();
+            }
+            // Koordinat inputları değiştiğinde otomatik güncelleme
+            if (e.target.id === 'coordX' || e.target.id === 'coordY') {
+                this.updateCoordinates();
+            }
+        });
     }
 
     // Modal işlemleri
@@ -597,10 +608,6 @@ class SVGEditor {
                     <label>Y Koordinatı:</label>
                     <input type="number" id="coordY" value="${originalY}" step="0.1">
                 </div>
-                <div class="coord-group">
-                    <label>Yazma Alanı Genişliği:</label>
-                    <input type="number" id="placeholderWidth" value="${Math.round(placeholderWidth)}" step="1" style="background: #f8f9fa;">
-                </div>
                 <button class="btn btn-secondary btn-sm" onclick="svgEditor.updateCoordinates()">Koordinatları Güncelle</button>
                 ${customCoords ? '<p style="color: #27ae60; font-size: 12px; margin-top: 5px;">✓ Özel koordinatlar yüklendi</p>' : ''}
             `;
@@ -610,7 +617,7 @@ class SVGEditor {
     }
 
     // Koordinatları güncelle
-    updateCoordinates() {
+    async updateCoordinates() {
         const newX = document.getElementById('coordX').value;
         const newY = document.getElementById('coordY').value;
         
@@ -629,8 +636,8 @@ class SVGEditor {
         // SVG verisini güncelle
         this.updateSvgInStorage();
         
-        // Önizlemeyi güncelle
-        this.generatePreview();
+        // Otomatik önizleme
+        await this.generatePreview();
         
         // Başarı mesajı
         this.showToast('Koordinatlar kaydedildi!');
