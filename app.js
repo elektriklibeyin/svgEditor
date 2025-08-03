@@ -376,6 +376,9 @@ class SVGEditor {
         // Placeholder input'larını oluştur
         this.createPlaceholderInputs();
         
+        // Yazma alanı bilgisini göster
+        this.showPlaceholderInfo();
+        
         // Placeholder koordinatlarını göster
         this.showPlaceholderCoordinates();
         
@@ -522,6 +525,35 @@ class SVGEditor {
         console.log('Basit replace yapıldı:', userText);
     }
 
+    // Yazma alanı bilgisini göster
+    showPlaceholderInfo() {
+        const container = document.getElementById('placeholderInfo');
+        
+        // Placeholder'ı bul
+        const placeholderMatch = this.currentSvg.content.match(/\[#+\]/);
+        
+        if (placeholderMatch) {
+            const placeholder = placeholderMatch[0];
+            const placeholderLength = placeholder.length - 2; // [ ve ] hariç
+            
+            // Genişlik hesapla
+            const charWidth = 140 * 0.72; // Font boyutu × çarpan
+            const calculatedWidth = placeholderLength * charWidth;
+            
+            container.innerHTML = `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+                    <p style="margin: 0; font-size: 14px; color: #2c3e50;">
+                        <strong>Placeholder:</strong> ${placeholder}<br>
+                        <strong>Karakter Sayısı:</strong> ${placeholderLength} adet<br>
+                        <strong>Hesaplanan Genişlik:</strong> ${Math.round(calculatedWidth)} piksel
+                    </p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = '<p style="color: #7f8c8d;">Yazma alanı bulunamadı.</p>';
+        }
+    }
+
     // Placeholder koordinatlarını göster ve düzenlenebilir yap
     showPlaceholderCoordinates() {
         const container = document.getElementById('placeholderCoords');
@@ -532,6 +564,16 @@ class SVGEditor {
         if (transformMatch) {
             let originalX = parseFloat(transformMatch[1]);
             let originalY = parseFloat(transformMatch[2]);
+            
+            // Placeholder genişliğini hesapla
+            const placeholderMatch = this.currentSvg.content.match(/\[#+\]/);
+            let placeholderWidth = 800; // Varsayılan
+            if (placeholderMatch) {
+                const placeholder = placeholderMatch[0];
+                const placeholderLength = placeholder.length - 2; // [ ve ] hariç
+                const charWidth = 140 * 0.72;
+                placeholderWidth = placeholderLength * charWidth;
+            }
             
             // Kaydedilmiş özel koordinatları kontrol et
             const customCoords = this.loadCustomCoordinates(this.currentSvg.id);
@@ -556,6 +598,10 @@ class SVGEditor {
                 <div class="coord-group">
                     <label>Y Koordinatı:</label>
                     <input type="number" id="coordY" value="${originalY}" step="0.1">
+                </div>
+                <div class="coord-group">
+                    <label>Yazma Alanı Genişliği:</label>
+                    <input type="number" id="placeholderWidth" value="${Math.round(placeholderWidth)}" step="1" readonly style="background: #f8f9fa;">
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="svgEditor.updateCoordinates()">Koordinatları Güncelle</button>
                 ${customCoords ? '<p style="color: #27ae60; font-size: 12px; margin-top: 5px;">✓ Özel koordinatlar yüklendi</p>' : ''}
