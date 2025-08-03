@@ -402,6 +402,16 @@ class SVGEditor {
                 <input type="text" id="placeholder_${index}" placeholder="Buraya metninizi yazın" />
             </div>
         `).join('');
+        
+        // Otomatik önizleme için event listener'lar ekle
+        this.currentSvg.placeholders.forEach((placeholder, index) => {
+            const input = document.getElementById(`placeholder_${index}`);
+            if (input) {
+                input.addEventListener('input', () => {
+                    this.generatePreview();
+                });
+            }
+        });
     }
 
     // Varsayılan boyutları ayarla
@@ -438,9 +448,9 @@ class SVGEditor {
                 const placeholder = placeholderMatch[0];
                 const placeholderLength = placeholder.length - 2; // [ ve ] hariç
                 
-                // Font boyutu: 140px, karakter genişliği: 140 * 0.6 = 84px
+                // Font boyutu: 140px, karakter genişliği: 140 * 0.75 = 105px
                 const fontSize = 140;
-                const charWidth = fontSize * 0.6;
+                const charWidth = fontSize * 0.70;
                 const placeholderWidth = placeholderLength * charWidth;
                 
                 console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Genişlik: ${placeholderWidth}`);
