@@ -458,7 +458,7 @@ class SVGEditor {
                 
                 // Font boyutu: 140px, karakter genişliği: 140 * 0.75 = 105px
                 const fontSize = 140;
-                const charWidth = fontSize * 0.70;
+                const charWidth = fontSize * 0.73;
                 const placeholderWidth = placeholderLength * charWidth;
                 
                 console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Genişlik: ${placeholderWidth}`);
@@ -539,9 +539,14 @@ class SVGEditor {
                     letterElements += scaledLetter;
                     
                     console.log(`${char} harfi eklendi: X=${currentX}`);
+                    
+                    // Harfin gerçek genişliğini kullan
+                    const letterWidth = this.getLetterWidth(letterSvg, finalScale);
+                    currentX += letterWidth;
+                } else {
+                    // Harf bulunamazsa varsayılan genişlik
+                    currentX += charWidth;
                 }
-                
-                currentX += charWidth;
             }
             
             // Harfleri SVG'ye ekle (</svg> etiketinden önce)
@@ -585,6 +590,21 @@ class SVGEditor {
             // Beyaz renk ve konumlandırma ekle
             return path.replace('<path', `<path transform="translate(${x}, ${y}) scale(${scale})" fill="white" stroke="white"`);
         }).join('');
+    }
+
+    // Harfin gerçek genişliğini al
+    getLetterWidth(letterSvg, scale) {
+        if (!letterSvg) return 50; // Varsayılan genişlik
+        
+        // viewBox'tan genişlik çıkar
+        const viewBoxMatch = letterSvg.match(/viewBox="([^"]+)"/);
+        if (viewBoxMatch) {
+            const viewBoxParts = viewBoxMatch[1].split(' ');
+            const width = parseFloat(viewBoxParts[2]);
+            return width * scale; // Scale ile çarp
+        }
+        
+        return 50 * scale; // Varsayılan
     }
 
     // SVG'yi indir
