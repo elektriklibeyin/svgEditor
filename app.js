@@ -443,19 +443,32 @@ class SVGEditor {
                 const charWidth = fontSize * 0.6;
                 const placeholderWidth = placeholderLength * charWidth;
                 
-                // Orta nokta hesapla (biraz sağa kaydır: +100px)
-                const centerX = 424.4 + (placeholderWidth / 2) + 100;
+                console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Genişlik: ${placeholderWidth}`);
                 
-                console.log(`Placeholder: ${placeholder}, Uzunluk: ${placeholderLength}, Orta: ${centerX}`);
-                
-                // Placeholder'ı sil ve yerine yazı koy
+                // Placeholder'ı sil
                 modifiedSvg = modifiedSvg.replace(placeholder, userText);
                 
-                // Yazıyı ortalanmış konuma yerleştir
-                modifiedSvg = modifiedSvg.replace(
-                    `<text class="cls-1" transform="translate(424.4 1478.8)">${userText}</text>`,
-                    `<text class="cls-1" transform="translate(${centerX} 1478.8)" text-anchor="middle" fill="red">${userText}</text>`
-                );
+                // Text elementini bul ve değiştir (genel regex)
+                const textRegex = new RegExp(`<text[^>]*>${userText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</text>`, 'g');
+                modifiedSvg = modifiedSvg.replace(textRegex, (match) => {
+                    console.log('Bulunan text elementi:', match);
+                    
+                    // Transform koordinatlarını çıkar
+                    const transformMatch = match.match(/transform="translate\(([^,]+)[,\s]+([^)]+)\)"/);
+                    if (transformMatch) {
+                        const originalX = parseFloat(transformMatch[1]);
+                        const originalY = parseFloat(transformMatch[2]);
+                        
+                        // Orta nokta hesapla
+                        const centerX = originalX + (placeholderWidth / 2);
+                        
+                        console.log(`Orijinal X: ${originalX}, Yeni orta X: ${centerX}`);
+                        
+                        // Yeni text elementi oluştur
+                        return `<text class="cls-1" transform="translate(${centerX} ${originalY})" text-anchor="middle" fill="red">${userText}</text>`;
+                    }
+                    return match;
+                });
             }
         }
         
