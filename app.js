@@ -476,8 +476,16 @@ class SVGEditor {
                 // Transform koordinatlarını bul (orijinal placeholder konumu)
                 const originalTransformMatch = this.currentSvg.content.match(/transform="translate\(([^,]+)[,\s]+([^)]+)\)"/);
                 if (originalTransformMatch) {
-                    const originalX = parseFloat(originalTransformMatch[1]);
-                    const originalY = parseFloat(originalTransformMatch[2]);
+                    let originalX = parseFloat(originalTransformMatch[1]);
+                    let originalY = parseFloat(originalTransformMatch[2]);
+                    
+                    // Kaydedilmiş özel koordinatları kontrol et
+                    const customCoords = this.loadCustomCoordinates(this.currentSvg.id);
+                    if (customCoords) {
+                        originalX = customCoords.x;
+                        originalY = customCoords.y;
+                        console.log(`Önizlemede özel koordinatlar kullanılıyor: X:${originalX}, Y:${originalY}`);
+                    }
                     
                     // Yazı genişliğini hesapla
                     const totalTextWidth = userText.length * charWidth;
@@ -522,8 +530,23 @@ class SVGEditor {
         const transformMatch = this.currentSvg.content.match(/transform="translate\(([^,]+)[,\s]+([^)]+)\)"/);
         
         if (transformMatch) {
-            const originalX = parseFloat(transformMatch[1]);
-            const originalY = parseFloat(transformMatch[2]);
+            let originalX = parseFloat(transformMatch[1]);
+            let originalY = parseFloat(transformMatch[2]);
+            
+            // Kaydedilmiş özel koordinatları kontrol et
+            const customCoords = this.loadCustomCoordinates(this.currentSvg.id);
+            if (customCoords) {
+                originalX = customCoords.x;
+                originalY = customCoords.y;
+                
+                // SVG içeriğini özel koordinatlarla güncelle
+                this.currentSvg.content = this.currentSvg.content.replace(
+                    /transform="translate\([^,]+[,\s]+[^)]+\)"/,
+                    `transform="translate(${originalX}, ${originalY})"`
+                );
+                
+                console.log(`Kaydedilmiş koordinatlar yüklendi: X:${originalX}, Y:${originalY}`);
+            }
             
             container.innerHTML = `
                 <div class="coord-group">
@@ -535,6 +558,7 @@ class SVGEditor {
                     <input type="number" id="coordY" value="${originalY}" step="0.1">
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="svgEditor.updateCoordinates()">Koordinatları Güncelle</button>
+                ${customCoords ? '<p style="color: #27ae60; font-size: 12px; margin-top: 5px;">✓ Özel koordinatlar yüklendi</p>' : ''}
             `;
         } else {
             container.innerHTML = '<p style="color: #7f8c8d;">Placeholder koordinatları bulunamadı.</p>';
@@ -555,11 +579,41 @@ class SVGEditor {
             `transform="translate(${newX}, ${newY})"`
         );
         
+        // Koordinatları localStorage'a kaydet
+        this.saveCustomCoordinates(this.currentSvg.id, newX, newY);
+        
+        // SVG verisini güncelle
+        this.updateSvgInStorage();
+        
         // Önizlemeyi güncelle
         this.generatePreview();
         
         // Başarı mesajı
-        this.showToast('Koordinatlar güncellendi!');
+        this.showToast('Koordinatlar kaydedildi!');
+    }
+
+    // Özel koordinatları kaydet
+    saveCustomCoordinates(svgId, x, y) {
+        let customCoords = JSON.parse(localStorage.getItem('customCoordinates') || '{}');
+        customCoords[svgId] = { x: parseFloat(x), y: parseFloat(y) };
+        localStorage.setItem('customCoordinates', JSON.stringify(customCoords));
+        console.log(`Koordinatlar kaydedildi: SVG ${svgId} -> X:${x}, Y:${y}`);
+    }
+
+    // Özel koordinatları yükle
+    loadCustomCoordinates(svgId) {
+        const customCoords = JSON.parse(localStorage.getItem('customCoordinates') || '{}');
+        return customCoords[svgId] || null;
+    }
+
+    // SVG'yi storage'da güncelle
+    updateSvgInStorage() {
+        const svgData = this.getSvgData();
+        const index = svgData.findIndex(svg => svg.id === this.currentSvg.id);
+        if (index !== -1) {
+            svgData[index] = this.currentSvg;
+            localStorage.setItem('svgData', JSON.stringify(svgData));
+        }
     }
 
     // Harfleri SVG'ye ekle
