@@ -599,20 +599,18 @@ class SVGEditor {
                 console.log(`Kaydedilmiş koordinatlar yüklendi: X:${originalX}, Y:${originalY}`);
             }
             
-            container.innerHTML = `
-                <div class="coord-group">
-                    <label>X Koordinatı:</label>
-                    <input type="number" id="coordX" value="${originalX}" step="0.1">
-                </div>
-                <div class="coord-group">
-                    <label>Y Koordinatı:</label>
-                    <input type="number" id="coordY" value="${originalY}" step="0.1">
-                </div>
-                <button class="btn btn-secondary btn-sm" onclick="svgEditor.updateCoordinates()">Koordinatları Güncelle</button>
-                ${customCoords ? '<p style="color: #27ae60; font-size: 12px; margin-top: 5px;">✓ Özel koordinatlar yüklendi</p>' : ''}
-            `;
-        } else {
-            container.innerHTML = '<p style="color: #7f8c8d;">Placeholder koordinatları bulunamadı.</p>';
+            // Sadece değerleri güncelle, HTML'i değiştirme
+            document.getElementById('coordX').value = originalX;
+            document.getElementById('coordY').value = originalY;
+            
+            // Status mesajını göster
+            const statusElement = document.getElementById('coordStatus');
+            if (customCoords) {
+                statusElement.textContent = '✓ Özel koordinatlar yüklendi';
+                statusElement.style.display = 'block';
+            } else {
+                statusElement.style.display = 'none';
+            }
         }
     }
 
