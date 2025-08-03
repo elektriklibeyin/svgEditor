@@ -601,3 +601,29 @@ mark {
         margin: 20px;
     }
 }
+
+/* Koordinat Stilleri */
+.coord-group {
+    margin-bottom: 10px;
+}
+
+.coord-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.coord-group input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-top: 10px;
+}

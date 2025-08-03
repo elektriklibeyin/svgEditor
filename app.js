@@ -376,6 +376,9 @@ class SVGEditor {
         // Placeholder input'larını oluştur
         this.createPlaceholderInputs();
         
+        // Placeholder koordinatlarını göster
+        this.showPlaceholderCoordinates();
+        
         // Varsayılan boyutları ayarla
         this.setDefaultDimensions();
     }
@@ -509,6 +512,54 @@ class SVGEditor {
         document.getElementById('svgCanvas').innerHTML = modifiedSvg;
         
         console.log('Basit replace yapıldı:', userText);
+    }
+
+    // Placeholder koordinatlarını göster ve düzenlenebilir yap
+    showPlaceholderCoordinates() {
+        const container = document.getElementById('placeholderCoords');
+        
+        // Transform koordinatlarını bul
+        const transformMatch = this.currentSvg.content.match(/transform="translate\(([^,]+)[,\s]+([^)]+)\)"/);
+        
+        if (transformMatch) {
+            const originalX = parseFloat(transformMatch[1]);
+            const originalY = parseFloat(transformMatch[2]);
+            
+            container.innerHTML = `
+                <div class="coord-group">
+                    <label>X Koordinatı:</label>
+                    <input type="number" id="coordX" value="${originalX}" step="0.1">
+                </div>
+                <div class="coord-group">
+                    <label>Y Koordinatı:</label>
+                    <input type="number" id="coordY" value="${originalY}" step="0.1">
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="svgEditor.updateCoordinates()">Koordinatları Güncelle</button>
+            `;
+        } else {
+            container.innerHTML = '<p style="color: #7f8c8d;">Placeholder koordinatları bulunamadı.</p>';
+        }
+    }
+
+    // Koordinatları güncelle
+    updateCoordinates() {
+        const newX = document.getElementById('coordX').value;
+        const newY = document.getElementById('coordY').value;
+        
+        console.log(`Koordinatlar güncellendi: X=${newX}, Y=${newY}`);
+        
+        // SVG içeriğini güncelle
+        const transformRegex = /transform="translate\([^,]+[,\s]+[^)]+\)"/;
+        this.currentSvg.content = this.currentSvg.content.replace(
+            transformRegex, 
+            `transform="translate(${newX}, ${newY})"`
+        );
+        
+        // Önizlemeyi güncelle
+        this.generatePreview();
+        
+        // Başarı mesajı
+        this.showToast('Koordinatlar güncellendi!');
     }
 
     // Harfleri SVG'ye ekle
