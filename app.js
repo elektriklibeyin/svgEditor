@@ -476,17 +476,30 @@ class SVGEditor {
                     const originalX = parseFloat(originalTransformMatch[1]);
                     const originalY = parseFloat(originalTransformMatch[2]);
                     
-                    // Başlangıç pozisyonu (ortalamak için)
+                    // Yazı genişliğini hesapla
                     const totalTextWidth = userText.length * charWidth;
-                    const startX = originalX + (placeholderWidth / 2) - (totalTextWidth / 2);
                     
-                    // Y koordinatını placeholder ile aynı hizaya getir (harfler için uygun offset)
-                    const adjustedY = originalY - 100; // Harflerin baseline'ını ayarla
+                    // Otomatik scale hesapla (yazı placeholder'dan büyükse küçült)
+                    let autoScale = 1.0;
+                    if (totalTextWidth > placeholderWidth) {
+                        autoScale = placeholderWidth / totalTextWidth;
+                        console.log(`Yazı çok uzun! Otomatik scale: ${autoScale.toFixed(2)}`);
+                    }
                     
-                    console.log(`Başlangıç X: ${startX}, Orijinal Y: ${originalY}, Ayarlanmış Y: ${adjustedY}`);
+                    // Scale'i charWidth'e uygula
+                    const adjustedCharWidth = charWidth * autoScale;
+                    const adjustedTotalWidth = userText.length * adjustedCharWidth;
+                    
+                    // Başlangıç pozisyonu (ortalamak için)
+                    const startX = originalX + (placeholderWidth / 2) - (adjustedTotalWidth / 2);
+                    
+                    // Y koordinatını placeholder ile aynı hizaya getir
+                    const adjustedY = originalY - 100;
+                    
+                    console.log(`Placeholder: ${placeholderWidth}px, Yazı: ${totalTextWidth}px, Scale: ${autoScale}, Yeni genişlik: ${adjustedTotalWidth}px`);
                     
                     // Harfleri letters klasöründen yükle ve ekle
-                    this.addLettersToSvg(modifiedSvg, userText, startX, adjustedY, charWidth);
+                    this.addLettersToSvg(modifiedSvg, userText, startX, adjustedY, adjustedCharWidth, autoScale);
                     return;
                 }
             }
@@ -499,7 +512,7 @@ class SVGEditor {
     }
 
     // Harfleri SVG'ye ekle
-    async addLettersToSvg(modifiedSvg, text, startX, startY, charWidth) {
+    async addLettersToSvg(modifiedSvg, text, startX, startY, charWidth, autoScale = 1.0) {
         try {
             let currentX = startX;
             let letterElements = '';
@@ -517,11 +530,12 @@ class SVGEditor {
                 // Harf SVG'sini yükle
                 const letterSvg = await this.loadLetterSvg(char);
                 if (letterSvg) {
-                    // Scale değerini al
-                    const scaleValue = document.getElementById('letterScale')?.value || 0.5;
+                    // Scale değerini al ve autoScale ile çarp
+                    const manualScale = document.getElementById('letterScale')?.value || 0.5;
+                    const finalScale = manualScale * autoScale;
                     
                     // Harfi konumlandır ve ölçeklendir
-                    const scaledLetter = this.scaleLetter(letterSvg, currentX, startY, charWidth, scaleValue);
+                    const scaledLetter = this.scaleLetter(letterSvg, currentX, startY, charWidth, finalScale);
                     letterElements += scaledLetter;
                     
                     console.log(`${char} harfi eklendi: X=${currentX}`);
